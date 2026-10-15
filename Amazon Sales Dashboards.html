@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="icon" href="data:," />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>Amazon Sales Dashboards</title>
+  <style>
+    :root{
+      color-scheme:light dark;
+      --shell:#0c1119; --rail:#111927; --rail-line:#253046; --rail-text:#dce7f5;
+      --paper:#f5f7fb; --ink:#152033; --muted:#617088; --card:#ffffff; --line:#dce3ed;
+      --shadow:0 14px 34px rgba(20,32,51,.10);
+    }
+    @media (prefers-color-scheme:dark){
+      :root{--shell:#080b10;--rail:#0e141e;--rail-line:#283345;--rail-text:#e8eef8;--paper:#111722;--ink:#f3f6fb;--muted:#aab6c8;--card:#182130;--line:#2b384b;--shadow:0 18px 44px rgba(0,0,0,.32)}
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:Manrope,system-ui,sans-serif;background:var(--shell);color:var(--ink)}
+    button{font:inherit}
+    .app{min-height:100vh;display:grid;grid-template-columns:94px minmax(0,1fr)}
+    .rail{position:sticky;top:0;height:100vh;background:var(--rail);border-right:1px solid var(--rail-line);padding:22px 12px;display:flex;flex-direction:column;z-index:10}
+    .rail-mark{width:44px;height:5px;background:#ffb126;border-radius:8px;margin:3px auto 31px}
+    .rail-nav{display:grid;gap:10px}
+    .nav-btn{border:0;background:transparent;color:#93a3b9;border-radius:14px;min-height:64px;padding:8px 4px;display:grid;place-items:center;gap:3px;cursor:pointer;transition:background .18s,color .18s}
+    .nav-btn:hover{background:#1a2535;color:white}
+    .nav-btn.active{background:#26344a;color:#fff}
+    .nav-num{font-family:"IBM Plex Mono",monospace;font-size:17px;font-weight:600}
+    .nav-label{font-size:9px;line-height:1.05;text-transform:uppercase;letter-spacing:.06em}
+    .rail-note{margin-top:auto;color:#74839a;font-size:9px;text-align:center;line-height:1.4}
+    .viewport{min-width:0}
+    .dashboard{display:none;min-height:100vh;background:var(--page);padding:clamp(18px,2.2vw,34px);--accent:#2f80ed;--accent2:#ff9f1a;--accent-soft:#e9f4ff;--page:#eef5fc}
+    .dashboard.active{display:block}
+    .dashboard.executive{--accent:#287dd5;--accent2:#ff941f;--accent-soft:#e1f1ff;--page:#eef6fd}
+    .dashboard.product{--accent:#00a878;--accent2:#f3ad12;--accent-soft:#dcf7eb;--page:#edf8f3}
+    .dashboard.geo{--accent:#8737c6;--accent2:#e256b5;--accent-soft:#f0e4fb;--page:#f6effb}
+    .dashboard.orders{--accent:#f27918;--accent2:#ffbd59;--accent-soft:#fff0df;--page:#fff6e9}
+    @media(prefers-color-scheme:dark){
+      .dashboard.executive{--accent:#62afff;--accent2:#ffad4a;--accent-soft:#17324c;--page:#0d1b2a}
+      .dashboard.product{--accent:#39d6a3;--accent2:#ffc94d;--accent-soft:#15382d;--page:#0d201b}
+      .dashboard.geo{--accent:#bd79f5;--accent2:#f279c7;--accent-soft:#382049;--page:#21122d}
+      .dashboard.orders{--accent:#ff9a45;--accent2:#ffd071;--accent-soft:#452b16;--page:#26180d}
+    }
+    .dash-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:18px}
+    .dash-title{display:flex;gap:14px;align-items:center}
+    .title-num{font-family:"IBM Plex Mono",monospace;color:var(--accent);font-weight:600;font-size:14px;border:1px solid currentColor;border-radius:999px;padding:7px 10px}
+    h1{font-size:clamp(25px,2.8vw,43px);line-height:1.05;letter-spacing:-.035em;margin:0;font-weight:800}
+    .subtitle{margin:7px 0 0;color:var(--muted);font-size:13px}
+    .stamp{text-align:right;color:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:10px;line-height:1.7;white-space:nowrap}
+    .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px}
+    .kpi{background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:14px;padding:15px 16px;min-width:0;position:relative;overflow:hidden}
+    .kpi:after{content:"";position:absolute;right:0;top:0;width:5px;height:100%;background:var(--accent)}
+    .kpi-label{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+    .kpi-value{font-family:"IBM Plex Mono",monospace;font-size:clamp(20px,2vw,30px);font-weight:600;margin-top:5px;letter-spacing:-.04em;white-space:nowrap}
+    .kpi-foot{font-size:10px;color:var(--muted);margin-top:5px}
+    .kpi-foot strong{color:var(--accent)}
+    .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px;align-items:start}
+    .panel{background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:16px;padding:16px;min-width:0;overflow:hidden}
+    .span-8{grid-column:span 8}.span-7{grid-column:span 7}.span-6{grid-column:span 6}.span-5{grid-column:span 5}.span-4{grid-column:span 4}
+    .panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:11px}
+    .panel-title{font-size:14px;font-weight:800;letter-spacing:-.01em}
+    .panel-note{color:var(--muted);font-size:10px;margin-top:2px}
+    .metric-tag{color:var(--accent);background:var(--accent-soft);padding:5px 7px;border-radius:8px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+    svg{display:block;width:100%;height:auto;overflow:visible}
+    .axis{stroke:var(--line);stroke-width:1}
+    .gridline{stroke:var(--line);stroke-width:1;opacity:.72}
+    .axis-label{fill:var(--muted);font:9px Manrope,sans-serif}
+    .value-label{fill:var(--ink);font:700 9px "IBM Plex Mono",monospace}
+    .bar{fill:var(--accent)}
+    .bar-alt{fill:var(--accent2)}
+    .line{fill:none;stroke:var(--accent);stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+    .dot{fill:var(--card);stroke:var(--accent);stroke-width:2}
+    .donut-wrap{display:grid;grid-template-columns:minmax(120px,1fr) minmax(130px,1fr);gap:10px;align-items:center}
+    .donut{width:min(190px,100%);aspect-ratio:1;margin:auto;border-radius:50%;position:relative;background:conic-gradient(var(--accent) 0 var(--p1),var(--accent2) var(--p1) var(--p2),#b8c5d6 var(--p2) 100%)}
+    .donut:after{content:"";position:absolute;inset:22%;border-radius:50%;background:var(--card)}
+    .donut-center{position:absolute;inset:0;z-index:1;display:grid;place-content:center;text-align:center;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:17px}
+    .donut-center small{display:block;font:9px Manrope,sans-serif;color:var(--muted);margin-top:2px}
+    .legend{display:grid;gap:8px;font-size:11px}
+    .legend-row{display:grid;grid-template-columns:9px 1fr auto;gap:7px;align-items:center}
+    .swatch{width:9px;height:9px;border-radius:3px;background:var(--sw)}
+    .legend-row strong{font-family:"IBM Plex Mono",monospace;font-size:10px}
+    .rank-list{display:grid;gap:8px}
+    .rank-row{display:grid;grid-template-columns:minmax(90px,140px) minmax(80px,1fr) 62px;gap:9px;align-items:center;font-size:10px}
+    .rank-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink);font-weight:600}
+    .track{height:9px;background:var(--accent-soft);border-radius:99px;overflow:hidden}
+    .fill{display:block;height:100%;background:var(--accent);border-radius:99px}
+    .rank-value{text-align:right;font-family:"IBM Plex Mono",monospace;color:var(--muted);font-size:9px}
+    .table-wrap{width:100%;overflow:hidden}
+    table{width:100%;border-collapse:collapse;font-size:10px}
+    th{text-align:left;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.06em;padding:0 8px 8px;border-bottom:1px solid var(--line)}
+    td{padding:8px;border-bottom:1px solid var(--line)}
+    tbody tr:last-child td{border-bottom:0}
+    td:last-child,th:last-child{text-align:right;font-family:"IBM Plex Mono",monospace}
+    .callout{display:flex;align-items:center;gap:10px;background:var(--accent-soft);padding:10px 12px;border-radius:12px;color:var(--ink);font-size:11px;font-weight:600}
+    .callout b{font-family:"IBM Plex Mono",monospace;color:var(--accent)}
+    .source{margin-top:12px;color:var(--muted);font-size:9px;text-align:right}
+    .mobile-tabs{display:none}
+    @media(max-width:1050px){.span-8,.span-7,.span-6,.span-5,.span-4{grid-column:span 6}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:720px){
+      .app{display:block}.rail{display:none}.viewport{padding-bottom:68px}.dashboard{min-height:auto;padding:18px 12px 26px}.dash-head{display:block}.dash-title{align-items:flex-start}.stamp{text-align:left;margin:10px 0 0 48px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.kpi{padding:13px 12px}.kpi-value{font-size:19px}.grid{display:block}.panel{margin-bottom:10px;padding:14px}.donut-wrap{grid-template-columns:1fr 1fr}.mobile-tabs{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;bottom:0;left:0;right:0;z-index:20;background:var(--rail);border-top:1px solid var(--rail-line);padding:7px max(7px,env(safe-area-inset-right)) calc(7px + env(safe-area-inset-bottom)) max(7px,env(safe-area-inset-left))}.mobile-tab{border:0;background:transparent;color:#8797ad;padding:7px 2px;border-radius:9px;font-size:9px;font-weight:700}.mobile-tab.active{background:#26344a;color:#fff}.mobile-tab b{display:block;font:600 14px "IBM Plex Mono",monospace;margin-bottom:2px}.rank-row{grid-template-columns:minmax(88px,125px) 1fr 56px}.table-wrap{overflow:visible}table,tbody{display:block}thead{display:none}tr{display:grid;grid-template-columns:1fr auto;gap:3px;padding:9px 0;border-bottom:1px solid var(--line)}td{display:block;padding:0;border:0}td:nth-child(2){color:var(--muted);font-size:9px;grid-row:2}td:last-child{grid-column:2;grid-row:1/3;align-self:center}.source{text-align:left}}
+    @media(max-width:390px){.kpis{grid-template-columns:1fr}.donut-wrap{grid-template-columns:1fr}.stamp{margin-left:0}.title-num{display:none}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail" aria-label="Dashboard navigation">
+    <div class="rail-mark" aria-hidden="true"></div>
+    <nav class="rail-nav">
+      <button class="nav-btn active" data-target="executive"><span class="nav-num">01</span><span class="nav-label">Overview</span></button>
+      <button class="nav-btn" data-target="product"><span class="nav-num">02</span><span class="nav-label">Product</span></button>
+      <button class="nav-btn" data-target="geo"><span class="nav-num">03</span><span class="nav-label">Geo</span></button>
+      <button class="nav-btn" data-target="orders"><span class="nav-num">04</span><span class="nav-label">Orders</span></button>
+    </nav>
+    <div class="rail-note">2022<br>snapshot</div>
+  </aside>
+
+  <main class="viewport">
+    <section class="dashboard executive active" id="executive" aria-labelledby="executive-title">
+      <header class="dash-head"><div class="dash-title"><span class="title-num">01</span><div><h1 id="executive-title">Executive Sales Overview</h1><p class="subtitle">Revenue, demand and commercial mix at a glance</p></div></div><div class="stamp">04 Jan — 06 Dec 2022<br>Amazon.in · INR</div></header>
+      <div class="kpis">
+        <article class="kpi"><div class="kpi-label">Net sales</div><div class="kpi-value">₹69.66M</div><div class="kpi-foot"><strong>100%</strong> of recorded revenue</div></article>
+        <article class="kpi"><div class="kpi-label">Orders</div><div class="kpi-value">100,227</div><div class="kpi-foot">Across <strong>107,362</strong> line items</div></article>
+        <article class="kpi"><div class="kpi-label">Units</div><div class="kpi-value">107,746</div><div class="kpi-foot"><strong>1.08</strong> units per order</div></article>
+        <article class="kpi"><div class="kpi-label">Avg. order value</div><div class="kpi-value">₹695</div><div class="kpi-foot">Sales ÷ unique orders</div></article>
+      </div>
+      <div class="grid">
+        <article class="panel span-8"><div class="panel-head"><div><div class="panel-title">Monthly sales pulse</div><div class="panel-note">Revenue in ₹ millions; baseline starts at zero</div></div><span class="metric-tag">Peak: Apr</span></div><div id="sales-trend"></div></article>
+        <article class="panel span-4"><div class="panel-head"><div><div class="panel-title">Category contribution</div><div class="panel-note">Share of ₹69.66M total sales</div></div></div><div id="exec-category" class="rank-list"></div></article>
+        <article class="panel span-4"><div class="panel-head"><div><div class="panel-title">Fulfilment mix</div><div class="panel-note">Unique orders by fulfilment owner</div></div></div><div id="exec-fulfilment"></div></article>
+        <article class="panel span-4"><div class="panel-head"><div><div class="panel-title">Top state markets</div><div class="panel-note">Ranked by sales value</div></div></div><div id="exec-states" class="rank-list"></div></article>
+        <article class="panel span-4"><div class="panel-head"><div><div class="panel-title">Commercial signal</div><div class="panel-note">Largest concentration in the portfolio</div></div></div><div class="callout"><b>49.9%</b><span>of revenue came from Set products.</span></div><div class="callout" style="margin-top:10px"><b>26.3%</b><span>of annual sales landed in April.</span></div></article>
+      </div>
+      <div class="source">Source: uploaded Amazon Sales Tableau workbook · 107,362 records</div>
+    </section>
+
+    <section class="dashboard product" id="product" aria-labelledby="product-title">
+      <header class="dash-head"><div class="dash-title"><span class="title-num">02</span><div><h1 id="product-title">Product &amp; Category Analytics</h1><p class="subtitle">Portfolio breadth, category economics and SKU leaders</p></div></div><div class="stamp">04 Jan — 06 Dec 2022<br>Product catalog view</div></header>
+      <div class="kpis">
+        <article class="kpi"><div class="kpi-label">Unique ASINs</div><div class="kpi-value">7,079</div><div class="kpi-foot">Distinct catalog identifiers</div></article>
+        <article class="kpi"><div class="kpi-label">Unique SKUs</div><div class="kpi-value">7,083</div><div class="kpi-foot">Across <strong>9</strong> categories</div></article>
+        <article class="kpi"><div class="kpi-label">Top category</div><div class="kpi-value">Set</div><div class="kpi-foot"><strong>₹34.73M</strong> in sales</div></article>
+        <article class="kpi"><div class="kpi-label">Top style</div><div class="kpi-value">JNE3797</div><div class="kpi-foot"><strong>₹2.48M</strong> in sales</div></article>
+      </div>
+      <div class="grid">
+        <article class="panel span-7"><div class="panel-head"><div><div class="panel-title">Sales by category</div><div class="panel-note">₹ millions across the full portfolio</div></div><span class="metric-tag">9 categories</span></div><div id="category-chart"></div></article>
+        <article class="panel span-5"><div class="panel-head"><div><div class="panel-title">Top styles</div><div class="panel-note">Revenue leaders, ₹</div></div></div><div id="style-list" class="rank-list"></div></article>
+        <article class="panel span-5"><div class="panel-head"><div><div class="panel-title">Demand by size</div><div class="panel-note">Unique orders; all categories</div></div></div><div id="size-chart"></div></article>
+        <article class="panel span-7"><div class="panel-head"><div><div class="panel-title">Top selling SKUs</div><div class="panel-note">Ranked by recorded sales</div></div><span class="metric-tag">Top 6</span></div><div class="table-wrap"><table><thead><tr><th>SKU</th><th>Rank</th><th>Sales</th></tr></thead><tbody id="sku-table"></tbody></table></div></article>
+      </div>
+      <div class="source">Source: uploaded Amazon Sales Tableau workbook · Product names were not present in the source</div>
+    </section>
+
+    <section class="dashboard geo" id="geo" aria-labelledby="geo-title">
+      <header class="dash-head"><div class="dash-title"><span class="title-num">03</span><div><h1 id="geo-title">Geographic Sales Intelligence</h1><p class="subtitle">Market concentration across Indian states, cities and regions</p></div></div><div class="stamp">04 Jan — 06 Dec 2022<br>Ship-to geography</div></header>
+      <div class="kpis">
+        <article class="kpi"><div class="kpi-label">States covered</div><div class="kpi-value">36</div><div class="kpi-foot">With recorded destination</div></article>
+        <article class="kpi"><div class="kpi-label">Cities covered</div><div class="kpi-value">6,713</div><div class="kpi-foot">Distinct city labels</div></article>
+        <article class="kpi"><div class="kpi-label">Top state</div><div class="kpi-value">Maharashtra</div><div class="kpi-foot"><strong>₹11.95M</strong> in sales</div></article>
+        <article class="kpi"><div class="kpi-label">Top city</div><div class="kpi-value">Bengaluru</div><div class="kpi-foot"><strong>₹6.59M</strong> in sales</div></article>
+      </div>
+      <div class="grid">
+        <article class="panel span-7"><div class="panel-head"><div><div class="panel-title">Top states by sales</div><div class="panel-note">₹ millions; ranked descending</div></div><span class="metric-tag">Top 10</span></div><div id="state-chart"></div></article>
+        <article class="panel span-5"><div class="panel-head"><div><div class="panel-title">Regional sales mix</div><div class="panel-note">State totals grouped into six regions</div></div></div><div id="region-donut"></div></article>
+        <article class="panel span-6"><div class="panel-head"><div><div class="panel-title">Top city markets</div><div class="panel-note">Revenue at ship-city level</div></div></div><div id="city-list" class="rank-list"></div></article>
+        <article class="panel span-6"><div class="panel-head"><div><div class="panel-title">Market concentration</div><div class="panel-note">Share of total sales captured by leaders</div></div></div><div class="callout"><b>17.2%</b><span>Maharashtra's share of national sales.</span></div><div class="callout" style="margin-top:10px"><b>30.7%</b><span>Combined share of Maharashtra and Karnataka.</span></div><div class="callout" style="margin-top:10px"><b>39.9%</b><span>Revenue from the South region.</span></div></article>
+      </div>
+      <div class="source">Source: uploaded Amazon Sales Tableau workbook · Region labels derived from ship-state groupings</div>
+    </section>
+
+    <section class="dashboard orders" id="orders" aria-labelledby="orders-title">
+      <header class="dash-head"><div class="dash-title"><span class="title-num">04</span><div><h1 id="orders-title">Order &amp; Fulfilment Analytics</h1><p class="subtitle">Order flow, fulfilment ownership and service-level mix</p></div></div><div class="stamp">04 Jan — 06 Dec 2022<br>Unique-order view</div></header>
+      <div class="kpis">
+        <article class="kpi"><div class="kpi-label">Total orders</div><div class="kpi-value">100,227</div><div class="kpi-foot">All records in scope</div></article>
+        <article class="kpi"><div class="kpi-label">Delivered</div><div class="kpi-value">26,566</div><div class="kpi-foot"><strong>26.5%</strong> of order IDs</div></article>
+        <article class="kpi"><div class="kpi-label">In transit</div><div class="kpi-value">73,661</div><div class="kpi-foot"><strong>73.5%</strong> of order IDs</div></article>
+        <article class="kpi"><div class="kpi-label">Expedited</div><div class="kpi-value">71,803</div><div class="kpi-foot"><strong>71.6%</strong> of order IDs</div></article>
+      </div>
+      <div class="grid">
+        <article class="panel span-4"><div class="panel-head"><div><div class="panel-title">Order status</div><div class="panel-note">Status labels grouped by outcome</div></div></div><div id="status-donut"></div></article>
+        <article class="panel span-4"><div class="panel-head"><div><div class="panel-title">Fulfilment owner</div><div class="panel-note">Amazon vs Merchant</div></div></div><div id="order-fulfilment"></div></article>
+        <article class="panel span-4"><div class="panel-head"><div><div class="panel-title">Service level</div><div class="panel-note">Unique orders by shipping speed</div></div></div><div id="service-chart"></div></article>
+        <article class="panel span-8"><div class="panel-head"><div><div class="panel-title">Monthly order volume</div><div class="panel-note">Unique orders; baseline starts at zero</div></div><span class="metric-tag">Peak: Apr</span></div><div id="orders-trend"></div></article>
+        <article class="panel span-4"><div class="panel-head"><div><div class="panel-title">Status detail</div><div class="panel-note">Original labels from the source</div></div></div><div id="status-list" class="rank-list"></div></article>
+      </div>
+      <div class="source">Source: uploaded Amazon Sales Tableau workbook · No cancelled or returned status rows were present</div>
+    </section>
+  </main>
+
+  <nav class="mobile-tabs" aria-label="Dashboard navigation">
+    <button class="mobile-tab active" data-target="executive"><b>01</b>Overview</button>
+    <button class="mobile-tab" data-target="product"><b>02</b>Product</button>
+    <button class="mobile-tab" data-target="geo"><b>03</b>Geo</button>
+    <button class="mobile-tab" data-target="orders"><b>04</b>Orders</button>
+  </nav>
+</div>
+<script>
+(function(){
+  const months=[
+    {label:'Jan',sales:2.596656,orders:3756},{label:'Feb',sales:2.670656,orders:3914},{label:'Mar',sales:2.742600,orders:4071},{label:'Apr',sales:18.291239,orders:27286},{label:'May',sales:15.927524,orders:22160},{label:'Jun',sales:13.135428,orders:18548},{label:'Jul',sales:2.491750,orders:3530},{label:'Aug',sales:2.543179,orders:3667},{label:'Sep',sales:2.424065,orders:3495},{label:'Oct',sales:2.313401,orders:3342},{label:'Nov',sales:2.259902,orders:3226},{label:'Dec',sales:2.264258,orders:3232}
+  ];
+  const categories=[['Set',34733734],['Kurta',18930111],['Western Dress',9828746],['Top',4795739],['Ethnic Dress',715351],['Blouse',409494],['Bottom',132872],['Saree',113696],['Dupatta',915]];
+  const states=[['Maharashtra',11954553],['Karnataka',9436223],['Telangana',6123778],['Uttar Pradesh',5968450],['Tamil Nadu',5812085],['Delhi',3950397],['Kerala',3301081],['West Bengal',3096107],['Andhra Pradesh',2796932],['Haryana',2588923]];
+  const cities=[['Bengaluru',6585477],['Hyderabad',4948195],['Mumbai',3890175],['New Delhi',3540672],['Chennai',3227043],['Pune',2519030],['Kolkata',1496574],['Gurugram',1166008]];
+  const styles=[['JNE3797',2476986],['J0230',1765835],['SET268',1190008],['J0341',1130414],['J0003',836982],['JNE3405',761110]];
+  const skus=[['J0230-SKD-M',479750],['JNE3797-KR-L',439562],['J0230-SKD-S',436032],['JNE3797-KR-M',376370],['JNE3797-KR-S',340662],['JNE3797-KR-XL',277177]];
+  const sizes=[['M',17914],['L',17529],['XL',16644],['XXL',14481],['S',13443],['3XL',11701],['XS',8516]];
+  const regions=[['South',27770559,'var(--accent)'],['North',17060828,'var(--accent2)'],['West',14964280,'#6750a4'],['East',6415075,'#e256b5'],['Central',1919644,'#2f93a7'],['Northeast',1478498,'#9aacc2'],['Other',51774,'#c8d1de']];
+  const fmtMoney=v=>'₹'+(v>=1000000?(v/1000000).toFixed(v>=10000000?1:2)+'M':Math.round(v).toLocaleString('en-IN'));
+  const fmtNum=v=>v.toLocaleString('en-IN');
+  function switchDash(id){
+    document.querySelectorAll('.dashboard').forEach(x=>x.classList.toggle('active',x.id===id));
+    document.querySelectorAll('[data-target]').forEach(x=>x.classList.toggle('active',x.dataset.target===id));
+    window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+  }
+  document.querySelectorAll('[data-target]').forEach(b=>b.addEventListener('click',()=>switchDash(b.dataset.target)));
+  function rankList(el,data,formatter){
+    const max=Math.max.apply(null,data.map(d=>d[1]));
+    document.getElementById(el).innerHTML=data.map(d=>`<div class="rank-row"><span class="rank-name" title="${d[0]}">${d[0]}</span><span class="track"><span class="fill" style="width:${(d[1]/max*100).toFixed(1)}%"></span></span><span class="rank-value">${formatter(d[1])}</span></div>`).join('');
+  }
+  function bars(el,data,formatter,opts){
+    opts=opts||{}; const W=640,H=opts.height||230, ml=opts.left||44,mr=18,mt=16,mb=opts.bottom||38; const pw=W-ml-mr,ph=H-mt-mb; const max=Math.max.apply(null,data.map(d=>d[1])); const step=pw/data.length, bw=Math.min(step*.62,42); let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${opts.label||'Bar chart'}">`;
+    for(let i=0;i<=4;i++){let y=mt+ph-(ph*i/4);svg+=`<line class="gridline" x1="${ml}" y1="${y}" x2="${W-mr}" y2="${y}"/><text class="axis-label" x="${ml-7}" y="${y+3}" text-anchor="end">${formatter(max*i/4)}</text>`}
+    data.forEach((d,i)=>{const h=d[1]/max*ph,x=ml+i*step+(step-bw)/2,y=mt+ph-h;svg+=`<rect class="bar" x="${x}" y="${y}" width="${bw}" height="${h}" rx="4"><title>${d[0]}: ${formatter(d[1])}</title></rect><text class="axis-label" x="${x+bw/2}" y="${H-13}" text-anchor="middle">${d[0]}</text>`});
+    svg+=`</svg>`;document.getElementById(el).innerHTML=svg;
+  }
+  function hBars(el,data,formatter,opts){
+    opts=opts||{}; const W=640,H=opts.height||300,ml=opts.left||118,mr=58,mt=12,mb=12;const pw=W-ml-mr,ph=H-mt-mb,max=Math.max.apply(null,data.map(d=>d[1])),step=ph/data.length,bh=Math.min(step*.58,18);let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${opts.label||'Horizontal bar chart'}">`;
+    data.forEach((d,i)=>{const y=mt+i*step+(step-bh)/2,w=d[1]/max*pw;svg+=`<text class="axis-label" x="${ml-8}" y="${y+bh*.72}" text-anchor="end">${d[0]}</text><rect class="bar" x="${ml}" y="${y}" width="${w}" height="${bh}" rx="4"><title>${d[0]}: ${formatter(d[1])}</title></rect><text class="value-label" x="${Math.min(ml+w+7,W-mr+3)}" y="${y+bh*.72}">${formatter(d[1])}</text>`});svg+='</svg>';document.getElementById(el).innerHTML=svg;
+  }
+  function lineChart(el,data,key,formatter,label){
+    const W=760,H=235,ml=45,mr=17,mt=18,mb=36,pw=W-ml-mr,ph=H-mt-mb,max=Math.max.apply(null,data.map(d=>d[key]));let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}">`;
+    for(let i=0;i<=4;i++){let y=mt+ph-(ph*i/4);svg+=`<line class="gridline" x1="${ml}" y1="${y}" x2="${W-mr}" y2="${y}"/><text class="axis-label" x="${ml-7}" y="${y+3}" text-anchor="end">${formatter(max*i/4)}</text>`}
+    const pts=data.map((d,i)=>[ml+i*pw/(data.length-1),mt+ph-d[key]/max*ph]);svg+=`<polyline class="line" points="${pts.map(p=>p.join(',')).join(' ')}"/>`;
+    pts.forEach((p,i)=>{svg+=`<circle class="dot" cx="${p[0]}" cy="${p[1]}" r="4"><title>${data[i].label}: ${formatter(data[i][key])}</title></circle><text class="axis-label" x="${p[0]}" y="${H-13}" text-anchor="middle">${data[i].label}</text>`});svg+='</svg>';document.getElementById(el).innerHTML=svg;
+  }
+  function donut(el,parts,totalLabel){
+    const total=parts.reduce((s,p)=>s+p[1],0);let cum=0;const stops=[];parts.forEach(p=>{const start=cum/total*100;cum+=p[1];const end=cum/total*100;stops.push(`${p[2]} ${start.toFixed(2)}% ${end.toFixed(2)}%`)});
+    document.getElementById(el).innerHTML=`<div class="donut-wrap"><div class="donut" style="background:conic-gradient(${stops.join(',')})"><div class="donut-center">${totalLabel}<small>${fmtNum(total)} orders</small></div></div><div class="legend">${parts.map(p=>`<div class="legend-row"><span class="swatch" style="--sw:${p[2]}"></span><span>${p[0]}</span><strong>${(p[1]/total*100).toFixed(1)}%</strong></div>`).join('')}</div></div>`;
+  }
+  lineChart('sales-trend',months,'sales',v=>v.toFixed(1)+'M','Monthly sales in millions of rupees');
+  rankList('exec-category',categories.slice(0,6),fmtMoney);
+  rankList('exec-states',states.slice(0,5),fmtMoney);
+  donut('exec-fulfilment',[['Amazon',72711,'var(--accent)'],['Merchant',27516,'var(--accent2)']],'100.2K');
+  bars('category-chart',categories.slice(0,7).map(d=>[d[0].replace('Western Dress','Western').replace('Ethnic Dress','Ethnic'),d[1]/1000000]),v=>v.toFixed(1)+'M',{height:255,bottom:42,label:'Sales by category in millions of rupees'});
+  rankList('style-list',styles,fmtMoney);
+  bars('size-chart',sizes,v=>Math.round(v/1000)+'K',{height:240,bottom:36,label:'Orders by size'});
+  document.getElementById('sku-table').innerHTML=skus.map((d,i)=>`<tr><td>${d[0]}</td><td>#${i+1}</td><td>${fmtMoney(d[1])}</td></tr>`).join('');
+  hBars('state-chart',states,v=>(v/1000000).toFixed(1)+'M',{height:315,left:125,label:'Top states by sales'});
+  (function(){const total=regions.reduce((s,r)=>s+r[1],0);let cum=0;const stops=[];regions.forEach(r=>{let a=cum/total*100;cum+=r[1];let b=cum/total*100;stops.push(`${r[2]} ${a}% ${b}%`)});document.getElementById('region-donut').innerHTML=`<div class="donut-wrap"><div class="donut" style="background:conic-gradient(${stops.join(',')})"><div class="donut-center">₹69.7M<small>Total sales</small></div></div><div class="legend">${regions.map(r=>`<div class="legend-row"><span class="swatch" style="--sw:${r[2]}"></span><span>${r[0]}</span><strong>${(r[1]/total*100).toFixed(1)}%</strong></div>`).join('')}</div></div>`})();
+  rankList('city-list',cities,fmtMoney);
+  donut('status-donut',[['In transit',73661,'var(--accent)'],['Delivered',26566,'var(--accent2)']],'100.2K');
+  donut('order-fulfilment',[['Amazon',72711,'var(--accent)'],['Merchant',27516,'var(--accent2)']],'100.2K');
+  bars('service-chart',[['Expedited',71803],['Standard',28424]],v=>Math.round(v/1000)+'K',{height:235,bottom:34,label:'Orders by shipping service level'});
+  lineChart('orders-trend',months,'orders',v=>Math.round(v/1000)+'K','Monthly unique order count');
+  rankList('status-list',[['Shipped',72711],['Delivered to buyer',26566],['Picked up',918],['Out for delivery',32]],fmtNum);
+})();
+</script>
+</body>
+</html>
