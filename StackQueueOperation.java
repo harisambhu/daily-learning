@@ -29,7 +29,7 @@ public class StackQueueOperation {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         StackQueue obj = new StackQueue();
-        obj.stackMethod(sc);
+        obj.stackMethod(sc); 
         obj.queueMethod(sc);
         sc.close();
     }
