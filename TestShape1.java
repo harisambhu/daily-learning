@@ -26,6 +26,6 @@ public class TestShape1 {
         Rectangle r = new Rectangle(10, 4);
         System.out.println("Circle Area: " + c.area());
         System.out.println("Rectangle Area: " + r.area());
-    }
+    } 
 }
 
