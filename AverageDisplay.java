@@ -14,7 +14,7 @@ class AverageCalculator {
 
     void calculateAverage() {
         double average = (a + b) / 2;
-        System.out.println("The average of the two numbers is = " + average);
+        System.out.println("The average of  the two numbers is = " + average);
     }
 }
 
