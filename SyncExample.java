@@ -27,7 +27,7 @@ class UserThread extends Thread {
     UserThread(BankAccount acc, String user, int amount) {
         this.account = acc;
         this.user = user;
-        this.amount = amount;
+        this.amount = amount; 
     }
     public void run() {
         account.withdraw(amount, user);
