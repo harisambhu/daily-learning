@@ -17,7 +17,7 @@ public class SimpleCalculator extends Frame implements ActionListener {
         add(tf, BorderLayout.NORTH);
 
         Panel p = new Panel();
-        p.setLayout(new GridLayout(5, 4, 5, 5));
+        p.setLayout(new GridLayout(5, 4, 5, 5)); 
 
         String buttons[] = {
             "7", "8", "9", "/",
